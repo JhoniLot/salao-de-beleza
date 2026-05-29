@@ -1327,6 +1327,10 @@
         <div id="client-steps-container"></div>
     </div>
 
+    <!-- Public Booking View -->
+    <div id="public-booking-view" style="display: none; background: var(--bg); min-height: 100vh; padding: 20px;">
+    </div>
+
     <!-- Global Modal Overlay -->
     <div class="modal-overlay" id="modal-overlay" onclick="closeModal(event)">
         <div class="modal" id="modal-content" onclick="event.stopPropagation()">
@@ -1607,11 +1611,14 @@
                     </div>
                 </div>
 
-                <header style="margin-bottom: 24px;">
+                <header style="margin-bottom: 24px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
                     <div>
                         <h1>Olá, ${studioName}! ✨</h1>
                         <p style="color: var(--text-light); font-size: 14px;">Tenha um ótimo dia de atendimentos.</p>
                     </div>
+                    <button class="btn btn-outline" style="font-size: 13px; padding: 10px 15px;" onclick="copyPublicBookingLink()">
+                        <i data-lucide="link"></i> Copiar Link de Agendamento
+                    </button>
                 </header>
 
                 <!-- Quick Actions -->
@@ -2748,6 +2755,16 @@
 
         // --- CLIENT FLOW (PORTAL) ---
         function checkClientRoute() {
+            if (window.location.hash.startsWith('#agendar')) {
+                document.getElementById('app').style.display = 'none';
+                if (document.getElementById('client-view')) document.getElementById('client-view').style.display = 'none';
+                document.getElementById('public-booking-view').style.display = 'block';
+                renderPublicBooking();
+                return;
+            } else {
+                if (document.getElementById('public-booking-view')) document.getElementById('public-booking-view').style.display = 'none';
+            }
+
             if (window.location.hash.startsWith('#ficha')) {
                 document.getElementById('app').style.display = 'none';
                 document.getElementById('client-view').style.display = 'block';
@@ -3809,7 +3826,7 @@
             checkPaymentSuccess();
             updateSidebarLogo();
             checkClientRoute();
-            if (!window.location.hash.startsWith('#ficha')) {
+            if (!window.location.hash.startsWith('#ficha') && !window.location.hash.startsWith('#agendar')) {
                 showView('dashboard');
             }
         };
@@ -3823,6 +3840,149 @@
         window.onkeydown = (e) => {
             if (e.key === 'Escape') closeModal();
         };
+
+        function copyPublicBookingLink() {
+            const base = window.location.href.split('#')[0];
+            const link = base + '#agendar';
+            navigator.clipboard.writeText(link).then(() => {
+                toast('Link copiado! Envie para seus clientes.');
+            });
+        }
+
+        function renderPublicBooking() {
+            const container = document.getElementById('public-booking-view');
+            container.innerHTML = `
+                <div class="step-card" style="max-width: 500px; text-align: left; padding: 0; overflow: hidden; border-radius: 30px; margin: 40px auto; background: white; box-shadow: var(--shadow);">
+                    <div style="background: var(--primary); padding: 30px; color: white; text-align: center;">
+                        <h2 style="color: white; margin-bottom: 10px; font-family: 'Playfair Display', serif;">Agendamento Online</h2>
+                        <p style="font-size: 14px; opacity: 0.9;">Preencha seus dados e escolha o melhor horário para você.</p>
+                    </div>
+                    <div style="padding: 30px;">
+                        <div class="form-group" style="margin-bottom: 20px;">
+                            <label style="display:block; font-size:13px; font-weight:600; margin-bottom:8px; color: var(--text-light);">Seu Nome Completo</label>
+                            <input type="text" id="public-nome" class="form-control" placeholder="Ex: Maria Eduarda">
+                        </div>
+                        <div class="form-group" style="margin-bottom: 20px;">
+                            <label style="display:block; font-size:13px; font-weight:600; margin-bottom:8px; color: var(--text-light);">Seu WhatsApp</label>
+                            <input type="text" id="public-whatsapp" class="form-control" placeholder="Ex: 11999999999" maxlength="11">
+                        </div>
+                        <div class="form-group" style="margin-bottom: 20px;">
+                            <label style="display:block; font-size:13px; font-weight:600; margin-bottom:8px; color: var(--text-light);">Serviço Desejado</label>
+                            <select id="public-srv" class="form-control" onchange="updatePublicSlots()">
+                                <option value="">Selecione...</option>
+                                ${state.servicos.map(s => `<option value="${s.id}">${s.nome} — R$ ${s.preco}</option>`).join('')}
+                            </select>
+                        </div>
+                        <div class="form-group" style="margin-bottom: 20px;">
+                            <label style="display:block; font-size:13px; font-weight:600; margin-bottom:8px; color: var(--text-light);">Data</label>
+                            <input type="date" id="public-date" class="form-control" min="${new Date().toISOString().split('T')[0]}" onchange="updatePublicSlots()">
+                        </div>
+                        <div class="form-group" style="margin-bottom: 20px;">
+                            <label style="display:block; font-size:13px; font-weight:600; margin-bottom:8px; color: var(--text-light);">Horários Disponíveis</label>
+                            <div id="public-slots-container" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;">
+                                <p style="grid-column: span 3; text-align: center; color: var(--text-light); font-size: 13px;">Selecione o serviço e a data acima.</p>
+                            </div>
+                        </div>
+                        <button id="btn-public-confirm" class="btn btn-primary" style="width: 100%; display: none;" onclick="confirmPublicBooking()">Confirmar Agendamento</button>
+                    </div>
+                </div>
+            `;
+        }
+
+        let selectedPublicSlot = null;
+        function updatePublicSlots() {
+            const date = document.getElementById('public-date').value;
+            const srvId = document.getElementById('public-srv').value;
+            const container = document.getElementById('public-slots-container');
+            const btnConfirm = document.getElementById('btn-public-confirm');
+
+            if (!date || !srvId) return;
+
+            const baseSlots = ["08:00", "08:30", "09:00", "09:30", "10:00", "10:30", "11:00", "11:30", "13:00", "13:30", "14:00", "14:30", "15:00", "15:30", "16:00", "16:30", "17:00", "17:30", "18:00", "18:30"];
+            const bookedSlots = state.agendamentos.filter(a => a.data === date && a.status !== 'cancelado').map(a => a.hora);
+            
+            const freeSlots = baseSlots.filter(s => !bookedSlots.includes(s));
+
+            container.innerHTML = freeSlots.map(s => `
+                <div class="public-slot-btn" onclick="selectPublicSlot(this, '${s}')" style="padding: 10px; border: 1px solid #EEE; border-radius: 10px; text-align: center; font-size: 13px; cursor:pointer; background: white;">${s}</div>
+            `).join('') || '<p style="grid-column: span 3; text-align: center; color: var(--danger); font-size: 12px;">Nenhum horário disponível para este dia.</p>';
+            
+            selectedPublicSlot = null;
+            btnConfirm.style.display = 'none';
+        }
+
+        function selectPublicSlot(el, slot) {
+            document.querySelectorAll('.public-slot-btn').forEach(b => {
+                b.style.background = 'white';
+                b.style.color = 'var(--text-main)';
+                b.style.borderColor = '#EEE';
+            });
+            el.style.background = 'var(--primary)';
+            el.style.color = 'white';
+            el.style.borderColor = 'var(--primary)';
+            selectedPublicSlot = slot;
+            document.getElementById('btn-public-confirm').style.display = 'block';
+        }
+
+        function confirmPublicBooking() {
+            const nome = document.getElementById('public-nome').value.trim();
+            let whatsapp = document.getElementById('public-whatsapp').value.trim().replace(/\D/g, '');
+            const srvId = document.getElementById('public-srv').value;
+            const date = document.getElementById('public-date').value;
+
+            if (!nome || whatsapp.length < 10 || !selectedPublicSlot || !srvId || !date) {
+                alert('Por favor, preencha todos os campos corretamente.');
+                return;
+            }
+
+            if (whatsapp.length === 11 || whatsapp.length === 10) {
+                whatsapp = '55' + whatsapp;
+            }
+
+            let c = state.clientes.find(cli => cli.whatsapp === whatsapp || cli.nome.toLowerCase() === nome.toLowerCase());
+            if (!c) {
+                c = {
+                    id: 'c' + Date.now(),
+                    nome: nome,
+                    whatsapp: whatsapp,
+                    nascimento: '',
+                    alergias: 'Nenhuma',
+                    fichaCompleta: false,
+                    ultimaVisita: '',
+                    totalVisitas: 0,
+                    pontos: 0,
+                    linkId: 'link_' + Math.random().toString(36).substr(2, 6),
+                    insta: ''
+                };
+                state.clientes.push(c);
+            }
+
+            const novo = {
+                id: 'a' + Date.now(),
+                clienteId: c.id,
+                servicoId: srvId,
+                hora: selectedPublicSlot,
+                data: date,
+                status: 'pendente',
+                profissionalId: state.profissionais && state.profissionais.length > 0 ? state.profissionais[0].id : 'p1',
+                fotos: []
+            };
+
+            state.agendamentos.push(novo);
+            save();
+            
+            const container = document.getElementById('public-booking-view');
+            container.innerHTML = `
+                <div class="step-card" style="max-width: 400px; margin: 60px auto; text-align: center; padding: 40px; border-radius: 30px; background: white; box-shadow: var(--shadow);">
+                    <div style="width: 80px; height: 80px; background: rgba(67, 160, 71, 0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 24px; color: var(--success);">
+                        <i data-lucide="check-circle" style="width: 40px; height: 40px;"></i>
+                    </div>
+                    <h2 style="margin-bottom: 15px; font-family: 'Playfair Display', serif;">Agendamento Confirmado!</h2>
+                    <p style="color: var(--text-light); font-size: 15px; margin-bottom: 30px;">Te esperamos no dia <strong>${new Date(date).toLocaleDateString('pt-BR', { timeZone: 'UTC' })}</strong> às <strong>${selectedPublicSlot}</strong>.</p>
+                </div>
+            `;
+            if (window.lucide) lucide.createIcons();
+        }
     </script>
 </body>
 </html>
