@@ -52,7 +52,8 @@
         #app {
             display: flex;
             height: 100vh;
-            width: 100vw;
+            width: 100%;
+            overflow-x: hidden;
         }
 
         /* Mobile Header */
@@ -550,9 +551,11 @@
             aside.active { left: 0; }
             .mobile-header { display: flex; }
             
-            main { padding: 90px 15px 30px 15px !important; width: 100vw; }
+            main { padding: 90px 15px 30px 15px !important; width: 100%; max-width: 100vw; overflow-x: hidden; box-sizing: border-box; }
             
             /* Forçar coluna única em TUDO no mobile */
+            .quick-actions { grid-template-columns: 1fr 1fr !important; gap: 10px !important; }
+            
             .stats-grid, 
             .dashboard-content, 
             .form-row, 
@@ -3879,8 +3882,8 @@
                         </div>
                         <div class="form-group" style="margin-bottom: 20px;">
                             <label style="display:block; font-size:13px; font-weight:600; margin-bottom:8px; color: var(--text-light);">Horários Disponíveis</label>
-                            <div id="public-slots-container" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;">
-                                <p style="grid-column: span 3; text-align: center; color: var(--text-light); font-size: 13px;">Selecione o serviço e a data acima.</p>
+                            <div id="public-slots-container" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(80px, 1fr)); gap: 10px;">
+                                <p style="grid-column: 1 / -1; text-align: center; color: var(--text-light); font-size: 13px;">Selecione o serviço e a data acima.</p>
                             </div>
                         </div>
                         <button id="btn-public-confirm" class="btn btn-primary" style="width: 100%; display: none;" onclick="confirmPublicBooking()">Confirmar Agendamento</button>
@@ -3905,7 +3908,7 @@
 
             container.innerHTML = freeSlots.map(s => `
                 <div class="public-slot-btn" onclick="selectPublicSlot(this, '${s}')" style="padding: 10px; border: 1px solid #EEE; border-radius: 10px; text-align: center; font-size: 13px; cursor:pointer; background: white;">${s}</div>
-            `).join('') || '<p style="grid-column: span 3; text-align: center; color: var(--danger); font-size: 12px;">Nenhum horário disponível para este dia.</p>';
+            `).join('') || '<p style="grid-column: 1 / -1; text-align: center; color: var(--danger); font-size: 12px;">Nenhum horário disponível para este dia.</p>';
             
             selectedPublicSlot = null;
             btnConfirm.style.display = 'none';
