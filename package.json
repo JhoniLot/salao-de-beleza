@@ -1,0 +1,9 @@
+{
+  "name": "salao-de-beleza",
+  "version": "1.0.0",
+  "description": "Sistema de Gestão",
+  "scripts": {
+    "build": "echo \"Build concluido, servindo HTML estatico\"",
+    "start": "echo \"Site estatico\""
+  }
+}
