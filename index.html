@@ -1888,7 +1888,7 @@
                                 </div>
                                 <div class="item-info">
                                     <div class="item-title">${s.nome}</div>
-                                    <div class="item-subtitle">${s.duracao} min • R$ ${s.preco.toFixed(2)}</div>
+                                    <div class="item-subtitle">${s.duracao} min • R$ ${s.preco.toFixed(2)} ${s.permiteEncaixe ? '<span style="color:var(--primary); font-size:11px; margin-left:5px;">[Aceita Encaixe]</span>' : ''}</div>
                                 </div>
                                 <div style="display: flex; gap: 8px;">
                                     <button class="btn btn-ghost" onclick="excluirServico('${s.id}')" style="color: var(--danger)">
@@ -2219,6 +2219,10 @@
                         <label>Pontos Gerados (Programa Fidelidade)</label>
                         <input type="number" id="new-srv-pts" class="form-control" placeholder="10">
                     </div>
+                    <div class="form-group" style="margin-top: 10px; display: flex; align-items: center; gap: 8px;">
+                        <input type="checkbox" id="new-srv-encaixe" style="width: 16px; height: 16px; accent-color: var(--primary);">
+                        <label for="new-srv-encaixe" style="margin: 0; font-size: 14px; cursor: pointer;">Permitir Encaixe neste serviço?</label>
+                    </div>
                     <div style="display: flex; gap: 12px; margin-top: 12px;">
                         <button class="btn btn-ghost" onclick="closeModal()" style="flex: 1">Cancelar</button>
                         <button class="btn btn-primary" onclick="saveNovoServico()" style="flex: 2">Salvar Serviço</button>
@@ -2440,6 +2444,7 @@
             const preco = document.getElementById('new-srv-preco').value;
             const custo = document.getElementById('new-srv-custo').value || 0;
             const pts = document.getElementById('new-srv-pts').value || 0;
+            const permiteEncaixe = document.getElementById('new-srv-encaixe') ? document.getElementById('new-srv-encaixe').checked : false;
 
             if (!nome || !dur || !preco) return alert('Preencha todos os campos!');
 
@@ -2449,7 +2454,8 @@
                 duracao: parseInt(dur),
                 preco: parseFloat(preco),
                 custo: parseFloat(custo),
-                pontos: parseInt(pts)
+                pontos: parseInt(pts),
+                permiteEncaixe: permiteEncaixe
             };
             state.servicos.push(novo);
             save();
@@ -2912,10 +2918,14 @@
             const baseSlots = ["08:00", "08:30", "09:00", "09:30", "10:00", "10:30", "11:00", "11:30", "13:00", "13:30", "14:00", "14:30", "15:00", "15:30", "16:00", "16:30", "17:00", "17:30", "18:00", "18:30"];
             const agendamentosNoDia = state.agendamentos.filter(a => a.data === date && a.status !== 'cancelado');
             
-            // Permitir até 2 agendamentos por horário (1 normal + 1 encaixe)
             const freeSlots = baseSlots.filter(s => {
-                const ocupados = agendamentosNoDia.filter(a => a.hora === s).length;
-                return ocupados < 2;
+                const ocupados = agendamentosNoDia.filter(a => a.hora === s);
+                if (ocupados.length === 0) return true;
+                if (ocupados.length >= 2) return false;
+                
+                const appt = ocupados[0];
+                const servico = state.servicos.find(serv => serv.id === appt.servicoId);
+                return servico && servico.permiteEncaixe === true;
             });
 
             container.innerHTML = freeSlots.map(s => `
@@ -3909,10 +3919,14 @@
             const baseSlots = ["08:00", "08:30", "09:00", "09:30", "10:00", "10:30", "11:00", "11:30", "13:00", "13:30", "14:00", "14:30", "15:00", "15:30", "16:00", "16:30", "17:00", "17:30", "18:00", "18:30"];
             const agendamentosNoDia = state.agendamentos.filter(a => a.data === date && a.status !== 'cancelado');
             
-            // Permitir até 2 agendamentos por horário (1 normal + 1 encaixe)
             const freeSlots = baseSlots.filter(s => {
-                const ocupados = agendamentosNoDia.filter(a => a.hora === s).length;
-                return ocupados < 2;
+                const ocupados = agendamentosNoDia.filter(a => a.hora === s);
+                if (ocupados.length === 0) return true;
+                if (ocupados.length >= 2) return false;
+                
+                const appt = ocupados[0];
+                const servico = state.servicos.find(serv => serv.id === appt.servicoId);
+                return servico && servico.permiteEncaixe === true;
             });
 
             container.innerHTML = freeSlots.map(s => `
