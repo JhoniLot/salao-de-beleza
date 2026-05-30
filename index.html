@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
@@ -2910,9 +2910,13 @@
             if (!date || !srvId) return;
 
             const baseSlots = ["08:00", "08:30", "09:00", "09:30", "10:00", "10:30", "11:00", "11:30", "13:00", "13:30", "14:00", "14:30", "15:00", "15:30", "16:00", "16:30", "17:00", "17:30", "18:00", "18:30"];
-            const bookedSlots = state.agendamentos.filter(a => a.data === date && a.status !== 'cancelado').map(a => a.hora);
+            const agendamentosNoDia = state.agendamentos.filter(a => a.data === date && a.status !== 'cancelado');
             
-            const freeSlots = baseSlots.filter(s => !bookedSlots.includes(s));
+            // Permitir até 2 agendamentos por horário (1 normal + 1 encaixe)
+            const freeSlots = baseSlots.filter(s => {
+                const ocupados = agendamentosNoDia.filter(a => a.hora === s).length;
+                return ocupados < 2;
+            });
 
             container.innerHTML = freeSlots.map(s => `
                 <div class="slot-btn" onclick="selectSlot(this, '${s}')" style="padding: 10px; border: 1px solid #EEE; border-radius: 10px; text-align: center; font-size: 13px; cursor:pointer; background: white;">${s}</div>
@@ -3903,9 +3907,13 @@
             if (!date || !srvId) return;
 
             const baseSlots = ["08:00", "08:30", "09:00", "09:30", "10:00", "10:30", "11:00", "11:30", "13:00", "13:30", "14:00", "14:30", "15:00", "15:30", "16:00", "16:30", "17:00", "17:30", "18:00", "18:30"];
-            const bookedSlots = state.agendamentos.filter(a => a.data === date && a.status !== 'cancelado').map(a => a.hora);
+            const agendamentosNoDia = state.agendamentos.filter(a => a.data === date && a.status !== 'cancelado');
             
-            const freeSlots = baseSlots.filter(s => !bookedSlots.includes(s));
+            // Permitir até 2 agendamentos por horário (1 normal + 1 encaixe)
+            const freeSlots = baseSlots.filter(s => {
+                const ocupados = agendamentosNoDia.filter(a => a.hora === s).length;
+                return ocupados < 2;
+            });
 
             container.innerHTML = freeSlots.map(s => `
                 <div class="public-slot-btn" onclick="selectPublicSlot(this, '${s}')" style="padding: 10px; border: 1px solid #EEE; border-radius: 10px; text-align: center; font-size: 13px; cursor:pointer; background: white;">${s}</div>
