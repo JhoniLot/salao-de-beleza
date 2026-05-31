@@ -2756,15 +2756,19 @@
 
             if (!nome) return alert('Preencha o nome do produto!');
 
-            state.produtos.push({
+            const novoProduto = {
                 id: 'pr' + Date.now(),
                 nome: nome,
                 qtd: parseInt(qtd),
                 min: parseInt(min),
-                un: 'un',
-                cat: 'Diversos'
-            });
+                custo: 0,
+                valor: 0
+            };
+            
+            state.produtos.push(novoProduto);
             save();
+            await dbInsert("estoque", novoProduto);
+            
             closeModal();
             showView('estoque');
             toast('Produto cadastrado!');
@@ -4183,11 +4187,11 @@
                     nome: nome,
                     whatsapp: whatsapp,
                     nascimento: '',
-                    alergias: 'Nenhuma',
                     fichaCompleta: false,
                     ultimaVisita: '',
                     totalVisitas: 0,
                     pontos: 0,
+                    fotos: [],
                     linkId: 'link_' + Math.random().toString(36).substr(2, 6),
                     insta: ''
                 };
