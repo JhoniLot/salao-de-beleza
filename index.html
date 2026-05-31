@@ -1644,58 +1644,7 @@
 
                 <div class="dashboard-content" style="grid-template-columns: 2fr 1fr; display: grid; gap: 24px;">
                     
-                    <!-- Modal Editar Cliente -->
-    <div id="editar-cliente" class="modal-content" style="display: none;">
-        <div class="modal-header">
-            <h2>Editar Cliente</h2>
-            <button class="btn btn-ghost" onclick="closeModal()"><i data-lucide="x"></i></button>
-        </div>
-        <div class="form-group">
-            <label>Nome Completo</label>
-            <input type="text" id="edit-cli-nome" class="form-control">
-            <input type="hidden" id="edit-cli-id">
-        </div>
-        <div class="form-group">
-            <label>WhatsApp</label>
-            <input type="text" id="edit-cli-whats" class="form-control">
-        </div>
-        <button class="btn btn-primary" style="width: 100%; margin-top: 12px;" onclick="salvarEdicaoCliente()">Salvar Alterações</button>
-    </div>
-
-    <!-- Modal Editar Serviço -->
-    <div id="editar-servico" class="modal-content" style="display: none;">
-        <div class="modal-header">
-            <h2>Editar Serviço</h2>
-            <button class="btn btn-ghost" onclick="closeModal()"><i data-lucide="x"></i></button>
-        </div>
-        <div class="form-group">
-            <label>Nome do Serviço</label>
-            <input type="text" id="edit-srv-nome" class="form-control">
-            <input type="hidden" id="edit-srv-id">
-        </div>
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
-            <div class="form-group">
-                <label>Preço (R$)</label>
-                <input type="number" id="edit-srv-preco" class="form-control">
-            </div>
-            <div class="form-group">
-                <label>Duração (min)</label>
-                <input type="number" id="edit-srv-duracao" class="form-control">
-            </div>
-        </div>
-        <div class="form-group">
-            <label>Cor na Agenda</label>
-            <input type="color" id="edit-srv-cor" class="form-control" style="padding: 0; height: 36px; cursor: pointer;">
-        </div>
-        <div class="form-group" style="display: flex; align-items: center; gap: 8px; margin-top: 10px;">
-            <input type="checkbox" id="edit-srv-encaixe" onchange="toggleListaEncaixes('edit-srv-encaixe', 'lista-encaixes-edit')" style="width: 18px; height: 18px;">
-            <label for="edit-srv-encaixe" style="margin: 0; font-weight: normal;">Permitir Encaixe neste serviço?</label>
-        </div>
-        <div id="lista-encaixes-edit" style="display:none; margin-bottom: 12px;"></div>
-        <button class="btn btn-primary" style="width: 100%; margin-top: 12px;" onclick="salvarEdicaoServico()">Salvar Alterações</button>
-    </div>
-
-    <!-- Overlay principal para Modais -->
+                    <!-- Overlay principal para Modais -->
                     <div>
                         <h3 style="margin-bottom: 16px; font-size: 16px;">Saúde do Negócio</h3>
                         <div class="stats-grid" style="grid-template-columns: 1fr 1fr; margin-bottom: 24px;">
@@ -1947,10 +1896,7 @@
         function abrirEdicaoCliente(id) {
             const c = state.clientes.find(cli => cli.id === id);
             if(!c) return;
-            document.getElementById('edit-cli-id').value = c.id;
-            document.getElementById('edit-cli-nome').value = c.nome;
-            document.getElementById('edit-cli-whats').value = c.whatsapp || '';
-            openModal('editar-cliente');
+            openModal('editar-cliente', c);
         }
 
         async function salvarEdicaoCliente() {
@@ -1975,13 +1921,7 @@
         function abrirEdicaoServico(id) {
             const s = state.servicos.find(ser => ser.id === id);
             if(!s) return;
-            document.getElementById('edit-srv-id').value = s.id;
-            document.getElementById('edit-srv-nome').value = s.nome;
-            document.getElementById('edit-srv-preco').value = s.preco;
-            document.getElementById('edit-srv-duracao').value = s.duracao;
-            document.getElementById('edit-srv-cor').value = s.cor || '#C9A84C';
-            document.getElementById('edit-srv-encaixe').checked = s.permiteEncaixe === true;
-            openModal('editar-servico');
+            openModal('editar-servico', s);
             setTimeout(() => {
                 renderCheckboxEncaixes('lista-encaixes-edit', s.id, s.servicos_compativeis || []);
                 toggleListaEncaixes('edit-srv-encaixe', 'lista-encaixes-edit');
@@ -2392,6 +2332,51 @@
                     </div>
                 `;
                 setTimeout(() => renderCheckboxEncaixes('lista-encaixes-novo', null, []), 50);
+            }
+            if (type === 'editar-cliente') {
+                content.innerHTML = `
+                    <h2 style="margin-bottom: 24px;">Editar Cliente</h2>
+                    <div class="form-group">
+                        <label>Nome Completo</label>
+                        <input type="text" id="edit-cli-nome" class="form-control" value="${data.nome}">
+                        <input type="hidden" id="edit-cli-id" value="${data.id}">
+                    </div>
+                    <div class="form-group">
+                        <label>WhatsApp</label>
+                        <input type="text" id="edit-cli-whats" class="form-control" value="${data.whatsapp || ''}">
+                    </div>
+                    <button class="btn btn-primary" style="width: 100%; margin-top: 12px;" onclick="salvarEdicaoCliente()">Salvar Alterações</button>
+                `;
+            }
+            if (type === 'editar-servico') {
+                content.innerHTML = `
+                    <h2 style="margin-bottom: 24px;">Editar Serviço</h2>
+                    <div class="form-group">
+                        <label>Nome do Serviço</label>
+                        <input type="text" id="edit-srv-nome" class="form-control" value="${data.nome}">
+                        <input type="hidden" id="edit-srv-id" value="${data.id}">
+                    </div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                        <div class="form-group">
+                            <label>Preço (R$)</label>
+                            <input type="number" id="edit-srv-preco" class="form-control" value="${data.preco}">
+                        </div>
+                        <div class="form-group">
+                            <label>Duração (min)</label>
+                            <input type="number" id="edit-srv-duracao" class="form-control" value="${data.duracao}">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Cor na Agenda</label>
+                        <input type="color" id="edit-srv-cor" class="form-control" style="padding: 0; height: 36px; cursor: pointer;" value="${data.cor || '#C9A84C'}">
+                    </div>
+                    <div class="form-group" style="display: flex; align-items: center; gap: 8px; margin-top: 10px;">
+                        <input type="checkbox" id="edit-srv-encaixe" ${data.permiteEncaixe ? 'checked' : ''} onchange="toggleListaEncaixes('edit-srv-encaixe', 'lista-encaixes-edit')" style="width: 18px; height: 18px;">
+                        <label for="edit-srv-encaixe" style="margin: 0; font-weight: normal;">Permitir Encaixe neste serviço?</label>
+                    </div>
+                    <div id="lista-encaixes-edit" style="display:${data.permiteEncaixe ? 'block' : 'none'}; margin-bottom: 12px;"></div>
+                    <button class="btn btn-primary" style="width: 100%; margin-top: 12px;" onclick="salvarEdicaoServico()">Salvar Alterações</button>
+                `;
             }
 
             if (type === 'novo-agendamento') {
