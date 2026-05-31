@@ -13,16 +13,16 @@
     <script>
         const supabaseUrl = 'https://nnryehmxitcjsdgaohyb.supabase.co';
         const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5ucnllaG14aXRjanNkZ2FvaHliIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAyMzExNjYsImV4cCI6MjA5NTgwNzE2Nn0.rimlx5UkKEM_HXBsmxxNFeYV_aGU2cr42en6-18_Gcg';
-        const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+        const supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
         
         async function dbInsert(table, data) {
-            try { await supabase.from(table).insert([data]); } catch(e) { console.error(e); }
+            try { await supabaseClient.from(table).insert([data]); } catch(e) { console.error(e); }
         }
         async function dbDelete(table, id) {
-            try { await supabase.from(table).delete().eq('id', id); } catch(e) { console.error(e); }
+            try { await supabaseClient.from(table).delete().eq('id', id); } catch(e) { console.error(e); }
         }
         async function dbUpdate(table, id, data) {
-            try { await supabase.from(table).update(data).eq('id', id); } catch(e) { console.error(e); }
+            try { await supabaseClient.from(table).update(data).eq('id', id); } catch(e) { console.error(e); }
         }
     </script>
 <style>
@@ -2961,7 +2961,7 @@
             document.getElementById('btn-self-confirm').style.display = 'block';
         }
 
-        function confirmSelfBooking(cliId) {
+        async function confirmSelfBooking(cliId) {
             const srvId = document.getElementById('self-srv').value;
             const date = document.getElementById('self-date').value;
             const s = state.servicos.find(ser => ser.id === srvId);
