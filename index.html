@@ -2139,38 +2139,14 @@
                         <button class="btn btn-outline" style="width: 100%" onclick="salvarTemplates()">Salvar Templates</button>
                     </div>
 
-                    <div class="card">
-                        <h3 style="margin-bottom: 20px; display: flex; align-items: center; gap: 8px;">
-                            <i data-lucide="credit-card" style="color: var(--primary);"></i> Assinatura Espaço Elysée
-                        </h3>
-                        <div style="background: ${state.config.isSubscribed ? 'linear-gradient(135deg, rgba(201, 168, 76, 0.1), rgba(166, 138, 61, 0.05))' : '#FFF'}; border: 1px solid ${state.config.isSubscribed ? '#C9A84C' : '#EEE'}; border-radius: 12px; padding: 20px; margin-bottom: 20px; position: relative; overflow: hidden;">
-                            ${state.config.isSubscribed ? `
-                                <div style="position: absolute; top: -10px; right: -10px; background: #C9A84C; color: #FFF; font-size: 8px; font-weight: 700; text-transform: uppercase; padding: 15px 25px 5px; transform: rotate(45deg); letter-spacing: 0.5px;">Premium</div>
-                                <h4 style="font-size: 16px; font-weight: 700; color: #2D2D2D; margin-bottom: 8px; display: flex; align-items: center; gap: 6px;">
-                                    Espaço Elysée Premium 💎
-                                </h4>
-                                <p style="font-size: 13px; color: #666; margin-bottom: 12px;">Seu plano premium está ativo e com acesso ilimitado desbloqueado!</p>
-                                <div style="font-size: 12px; color: #555; display: grid; gap: 6px;">
-                                    <div><strong>Método:</strong> ${state.config.subscriptionType || 'Stripe Checkout'}</div>
-                                    <div><strong>Valor:</strong> R$ 47,00/mês</div>
-                                    <div><strong>ID:</strong> <code style="font-size: 10px; background: rgba(0,0,0,0.05); padding: 2px 4px; border-radius: 4px;">${state.config.subscriptionId}</code></div>
-                                </div>
-                            ` : `
-                                <h4 style="font-size: 16px; font-weight: 700; color: #2D2D2D; margin-bottom: 8px;">Espaço Elysée Standard / Demo</h4>
-                                <p style="font-size: 13px; color: #666; margin-bottom: 12px;">Seu acesso é demonstrativo. Assine o plano completo por apenas R$ 47/mês para desbloquear todos os recursos e migração gratuita.</p>
-                                <a href="index.html#pricing" class="btn btn-primary" style="display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; font-size: 12px; text-decoration: none;">
-                                    <i data-lucide="sparkles" style="width: 12px; height: 12px;"></i> Assinar Espaço Elysée Premium
-                                </a>
-                            `}
-                        </div>
-                    </div>
+
 
                     <div class="card" style="margin-top: 32px; grid-column: span 2;">
                         <h3 style="margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
-                            <i data-lucide="refresh-cw" style="color: var(--primary);"></i> Migração de Dados de Concorrentes 🚀
+                            <i data-lucide="refresh-cw" style="color: var(--primary);"></i> Migração de Dados 🚀
                         </h3>
                         <p style="color: var(--text-light); font-size: 14px; margin-bottom: 20px;">
-                            Migre do <strong>Trinks</strong>, <strong>Avec</strong>, <strong>Simples Agenda</strong> ou de uma planilha Excel personalizada em segundos. 
+                            Migre de outros aplicativos que você usava ou de uma planilha Excel personalizada em segundos. 
                             Exporte a lista de clientes em formato CSV no seu sistema anterior e faça o upload abaixo.
                         </p>
                         <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 20px; background: rgba(0,0,0,0.02); border: 1px dashed rgba(201, 168, 76, 0.3); border-radius: 12px; padding: 20px;">
@@ -2178,9 +2154,6 @@
                                 <label style="display: block; font-weight: 700; margin-bottom: 8px; font-size: 13px;">1. Sistema de Origem</label>
                                 <select class="form-control" id="migration-source" style="width: 100%;" onchange="updateMigrationGuide()">
                                     <option value="generic">Planilha Genérica (Excel / CSV)</option>
-                                    <option value="trinks">Trinks</option>
-                                    <option value="avec">Avec</option>
-                                    <option value="simples">Simples Agenda</option>
                                 </select>
                                 <div id="migration-guide-box" style="margin-top: 12px; font-size: 12px; color: #666; line-height: 1.4;">
                                     Selecione colunas: Nome, WhatsApp, Nascimento, Alergias na sua planilha CSV.
