@@ -2852,6 +2852,17 @@
             }
         }
 
+        async function excluirAgendamento(id) {
+            if (confirm('Tem certeza que deseja cancelar este agendamento?')) {
+                state.agendamentos = state.agendamentos.filter(a => a.id !== id);
+                save();
+                await dbDelete("agendamentos", id);
+                closeModal();
+                showView('agenda');
+                toast('Agendamento cancelado!');
+            }
+        }
+
         async function marcarComoRealizado(id) {
             const a = state.agendamentos.find(item => item.id === id);
             const s = state.servicos.find(ser => ser.id === a.servico_id);
