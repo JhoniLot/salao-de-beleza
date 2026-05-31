@@ -1560,8 +1560,8 @@
                                     </div>
                                     <div style="display: flex; flex-direction: column; gap: 4px;">
                                         ${ags.map(a => {
-                                            const srv = state.servicos.find(s => s.id === a.servicoId);
-                                            const cli = state.clientes.find(c => c.id === a.clienteId);
+                                            const srv = state.servicos.find(s => s.id === a.servico_id);
+                                            const cli = state.clientes.find(c => c.id === a.cliente_id);
                                             const cor = srv?.cor || '#C9A84C';
                                             return `<div class="weekly-block" style="background-color: ${cor}20; border-left-color: ${cor};" onclick="openModal('detalhe-agendamento', ${JSON.stringify(a).replace(/"/g, '&quot;')})">
                                                 <div style="font-weight: 700; color: #1A1A1A; display: flex; align-items: center; gap: 4px; line-height: 1;"><i data-lucide="clock" style="width: 10px; height: 10px;"></i> ${a.hora}</div>
@@ -1695,13 +1695,13 @@
                                             
                                             const stats = {};
                                             realizados.forEach(a => {
-                                                if (!stats[a.servicoId]) stats[a.servicoId] = { count: 0, receita: 0, custo: 0 };
-                                                const s = state.servicos.find(ser => ser.id === a.servicoId);
+                                                if (!stats[a.servico_id]) stats[a.servico_id] = { count: 0, receita: 0, custo: 0 };
+                                                const s = state.servicos.find(ser => ser.id === a.servico_id);
                                                 if (s) {
-                                                    stats[a.servicoId].count++;
-                                                    stats[a.servicoId].receita += s.preco;
-                                                    stats[a.servicoId].custo += (s.custo || 0);
-                                                    stats[a.servicoId].nome = s.nome;
+                                                    stats[a.servico_id].count++;
+                                                    stats[a.servico_id].receita += s.preco;
+                                                    stats[a.servico_id].custo += (s.custo || 0);
+                                                    stats[a.servico_id].nome = s.nome;
                                                 }
                                             });
                                             
@@ -1804,8 +1804,8 @@
                 `;
             } else {
                 todayAppts.forEach(a => {
-                    const s = state.servicos.find(ser => ser.id === a.servicoId);
-                    const c = state.clientes.find(cli => cli.id === a.clienteId);
+                    const s = state.servicos.find(ser => ser.id === a.servico_id);
+                    const c = state.clientes.find(cli => cli.id === a.cliente_id);
                     
                     const block = document.createElement('div');
                     const corServico = s?.cor || '#C9A84C';
@@ -1906,7 +1906,7 @@
         async function excluirCliente(id) {
             if (!confirm('Tem certeza que deseja excluir este cliente? Isso apagará também todo o histórico dele.')) return;
             state.clientes = state.clientes.filter(c => c.id !== id);
-            state.agendamentos = state.agendamentos.filter(a => a.clienteId !== id);
+            state.agendamentos = state.agendamentos.filter(a => a.cliente_id !== id);
             await dbDelete('clientes', id);
             closeModal();
             showView('clientes');
@@ -2429,8 +2429,8 @@
             }
 
             if (type === 'detalhe-agendamento') {
-                const c = state.clientes.find(cli => cli.id === data.clienteId);
-                const s = state.servicos.find(ser => ser.id === data.servicoId);
+                const c = state.clientes.find(cli => cli.id === data.cliente_id);
+                const s = state.servicos.find(ser => ser.id === data.servico_id);
                 content.innerHTML = `
                     <div style="text-align: center; margin-bottom: 24px;">
                         <span class="badge badge-${data.status}">${data.status}</span>
@@ -2518,7 +2518,7 @@
 
         function toggleClientTab(tab, id) {
             const c = state.clientes.find(cli => cli.id === id);
-            const atendimentos = state.agendamentos.filter(a => a.clienteId === c.id && a.status === 'realizado').sort((a,b) => new Date(b.data) - new Date(a.data));
+            const atendimentos = state.agendamentos.filter(a => a.cliente_id === c.id && a.status === 'realizado').sort((a,b) => new Date(b.data) - new Date(a.data));
             const container = document.getElementById('perfil-tab-content');
             const tabResumo = document.getElementById('tab-resumo');
             const tabFotos = document.getElementById('tab-fotos');
@@ -2532,7 +2532,7 @@
                 container.innerHTML = `
                     <div style="display: flex; flex-direction: column; gap: 20px;">
                         ${atendimentos.map(a => {
-                            const s = state.servicos.find(ser => ser.id === a.servicoId);
+                            const s = state.servicos.find(ser => ser.id === a.servico_id);
                             const fotos = a.fotos || [];
                             return `
                                 <div class="card" style="background: white; padding: 15px; border: 1px solid #EEE; box-shadow: none;">
@@ -2686,8 +2686,8 @@
 
             const novo = {
                 id: 'a' + Date.now(),
-                clienteId: cliId,
-                servicoId: srvId,
+                cliente_id: cliId,
+                servico_id: srvId,
                 hora: hora,
                 data: data,
                 status: 'pendente',
@@ -2794,8 +2794,8 @@
 
         async function marcarComoRealizado(id) {
             const a = state.agendamentos.find(item => item.id === id);
-            const s = state.servicos.find(ser => ser.id === a.servicoId);
-            const c = state.clientes.find(cli => cli.id === a.clienteId);
+            const s = state.servicos.find(ser => ser.id === a.servico_id);
+            const c = state.clientes.find(cli => cli.id === a.cliente_id);
             
             a.status = "realizado"; await dbUpdate("agendamentos", a.id, { status: "realizado" });
             c.ultimaVisita = a.data;
@@ -2823,7 +2823,7 @@
             if (estrelas) {
                 state.avaliacoes.push({
                     id: 'v' + Date.now(),
-                    clienteId: c.id,
+                    cliente_id: c.id,
                     profissionalId: a.profissionalId,
                     estrelas: parseInt(estrelas),
                     data: new Date().toISOString()
@@ -2875,7 +2875,7 @@
 
             const statsServicos = {};
             atendimentos.forEach(a => {
-                const s = state.servicos.find(ser => ser.id === a.servicoId);
+                const s = state.servicos.find(ser => ser.id === a.servico_id);
                 if (s) {
                     if (!statsServicos[s.id]) statsServicos[s.id] = { nome: s.nome, qtd: 0, valorTotal: 0 };
                     statsServicos[s.id].qtd++;
@@ -3008,7 +3008,7 @@
 
         function renderPortalCliente(c, activeTab = 'resumo') {
             const container = document.getElementById('client-steps-container');
-            const atendimentos = state.agendamentos.filter(a => a.clienteId === c.id && a.status === 'realizado').sort((a,b) => new Date(b.data) - new Date(a.data));
+            const atendimentos = state.agendamentos.filter(a => a.cliente_id === c.id && a.status === 'realizado').sort((a,b) => new Date(b.data) - new Date(a.data));
             
             container.innerHTML = `
                 <div class="step-card" style="max-width: 500px; text-align: left; padding: 0; overflow: hidden; border-radius: 30px;">
@@ -3071,7 +3071,7 @@
                         ${activeTab === 'historico' ? `
                             <div style="display: flex; flex-direction: column; gap: 15px;">
                                 ${atendimentos.map(a => {
-                                    const s = state.servicos.find(ser => ser.id === a.servicoId);
+                                    const s = state.servicos.find(ser => ser.id === a.servico_id);
                                     return `
                                         <div class="card" style="padding: 15px; box-shadow: none; border: 1px solid #EEE;">
                                             <div style="display: flex; justify-content: space-between; align-items: center;">
@@ -3090,7 +3090,7 @@
                         ${activeTab === 'galeria' ? `
                             <div style="display: flex; flex-direction: column; gap: 24px;">
                                 ${atendimentos.map(a => {
-                                    const s = state.servicos.find(ser => ser.id === a.servicoId);
+                                    const s = state.servicos.find(ser => ser.id === a.servico_id);
                                     const fotosAtendimento = a.fotos || [];
                                     if (fotosAtendimento.length === 0) return '';
                                     return `
@@ -3135,7 +3135,7 @@
                 if (ocupados.length >= 2) return false;
                 
                 const appt = ocupados[0];
-                const servico = state.servicos.find(serv => serv.id === appt.servicoId);
+                const servico = state.servicos.find(serv => serv.id === appt.servico_id);
                 return servico && servico.permiteEncaixe === true;
             });
 
@@ -3169,8 +3169,8 @@
 
             const novo = {
                 id: 'a' + Date.now(),
-                clienteId: cliId,
-                servicoId: srvId,
+                cliente_id: cliId,
+                servico_id: srvId,
                 hora: selectedSlot,
                 data: date,
                 status: 'pendente',
@@ -4136,7 +4136,7 @@
                 if (ocupados.length >= 2) return false;
                 
                 const appt = ocupados[0];
-                const servico = state.servicos.find(serv => serv.id === appt.servicoId);
+                const servico = state.servicos.find(serv => serv.id === appt.servico_id);
                 return servico && servico.permiteEncaixe === true;
             });
 
@@ -4196,8 +4196,8 @@
 
             const novo = {
                 id: 'a' + Date.now(),
-                clienteId: c.id,
-                servicoId: srvId,
+                cliente_id: c.id,
+                servico_id: srvId,
                 hora: selectedPublicSlot,
                 data: date,
                 status: 'pendente',
