@@ -1243,7 +1243,7 @@
             <div class="billing-features-list">
                 <div class="billing-feature-item"><i data-lucide="check-circle-2"></i> <span>Agenda interativa e intuitiva</span></div>
                 <div class="billing-feature-item"><i data-lucide="check-circle-2"></i> <span>Fichas de Anamnese ilimitadas</span></div>
-
+                <div class="billing-feature-item"><i data-lucide="check-circle-2"></i> <span>Mensagens de WhatsApp automatizadas</span></div>
                 <div class="billing-feature-item"><i data-lucide="check-circle-2"></i> <span>Fluxo de Caixa e Controle de Estoque</span></div>
                 <div class="billing-feature-item"><i data-lucide="check-circle-2"></i> <span>Migração Grátis de outros sistemas</span></div>
             </div>
@@ -1743,7 +1743,9 @@
                                             <div class="item-title" style="font-size: 13px;">${c.nome} ${isToday ? '🎉' : ''}</div>
                                             <div class="item-subtitle" style="font-size: 11px;">Dia ${c.nascimento.split('-')[2]}</div>
                                         </div>
-
+                                        <button class="btn btn-ghost" style="padding: 6px 10px; font-size: 11px; color: var(--primary);" onclick="enviarWhats('${c.whatsapp}', 'aniversario', {nome: '${c.nome}'})">
+                                            <i data-lucide="message-circle" style="width: 14px;"></i>
+                                        </button>
                                     </div>
                                 `}).join('') || '<p style="color: var(--text-light); font-size: 13px;">Nenhum aniversariante neste mês.</p>'}
                             </div>
@@ -2171,7 +2173,17 @@
                         </div>
                     </div>
 
-
+                    <div class="card" style="margin-top: 32px; grid-column: span 2;">
+                        <h3 style="margin-bottom: 12px;">Integração WhatsApp (Automático)</h3>
+                        <p style="color: var(--text-light); font-size: 14px; margin-bottom: 20px;">
+                            Para enviar mensagens automáticas, integre com uma API (Evolution API ou Z-API).
+                        </p>
+                        <div class="form-group">
+                            <label>Webhook URL</label>
+                            <input type="text" class="form-control" placeholder="https://sua-api.com/webhook" value="${state.config.apiWebhook}">
+                        </div>
+                        <button class="btn btn-primary" onclick="toast('Integração em desenvolvimento...')">Testar Conexão</button>
+                    </div>
                 </div>
             `;
             setTimeout(() => {
@@ -2348,7 +2360,9 @@
                                 <i data-lucide="check"></i> Marcar como Realizado
                             </button>
                         ` : ''}
-
+                        <button class="btn btn-outline" onclick="enviarWhats('${c.whatsapp}', 'confirmacao', {nome: '${c.nome}', servico: '${s.nome}', hora: '${data.hora}'})" style="justify-content: center;">
+                            <i data-lucide="message-circle"></i> Enviar Confirmação
+                        </button>
                         <button class="btn btn-ghost" onclick="excluirAgendamento('${data.id}')" style="justify-content: center; color: var(--danger)">
                             <i data-lucide="trash-2"></i> Cancelar Agendamento
                         </button>
@@ -2408,7 +2422,9 @@
                     </div>
 
                     <div style="display: grid; gap: 12px; margin-top: 24px;">
-
+                        <button class="btn btn-primary" style="justify-content: center" onclick="enviarWhats('${c.whatsapp}', 'ficha', {nome: '${c.nome}', linkId: '${c.linkId}'})">
+                            <i data-lucide="message-circle"></i> Enviar pelo WhatsApp
+                        </button>
                         <button class="btn btn-outline" style="justify-content: center" onclick="closeModal(); openModal('novo-agendamento')">Novo Agendamento</button>
                     </div>
                 `;
