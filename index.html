@@ -1407,100 +1407,28 @@
         };
 
         // --- MOCK DATA INITIALIZATION ---
-        function initData() {
-            const getHojeLocal = () => {
-                const d = new Date();
-                return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().split('T')[0];
-            };
-            const hoje = getHojeLocal();
-
-            // Carregar lista de usuários global
-            const globalUsers = localStorage.getItem('lumi_users_list');
-            state.users = globalUsers ? JSON.parse(globalUsers) : [];
-
-            // Carregar dados da sessão atual
-            const saved = localStorage.getItem('lumi_data');
-            if (saved) {
-                try {
-                    const parsed = JSON.parse(saved);
-                    state = {
-                        ...state,
-                        ...parsed,
-                        config: {
-                            ...state.config,
-                            ...(parsed.config || {})
-                        }
-                    };
-                } catch (e) {
-                    console.error("Erro ao carregar lumi_data:", e);
-                }
+        async function initData() {
+            state.session = { loggedIn: true, currentEmail: 'admin@salao.com', isDemo: false };
+            
+            try {
+                const [resCli, resSrv, resAge, resTra, resEst, resCfg] = await Promise.all([
+                    supabaseClient.from('clientes').select('*'),
+                    supabaseClient.from('servicos').select('*'),
+                    supabaseClient.from('agendamentos').select('*'),
+                    supabaseClient.from('transacoes').select('*'),
+                    supabaseClient.from('estoque').select('*'),
+                    supabaseClient.from('config').select('*').limit(1).single()
+                ]);
+                if (resCli.data) state.clientes = resCli.data;
+                if (resSrv.data) state.servicos = resSrv.data;
+                if (resAge.data) state.agendamentos = resAge.data;
+                if (resTra.data) state.transacoes = resTra.data;
+                if (resEst.data) state.produtos = resEst.data;
+                if (resCfg.data) state.config = { ...state.config, ...resCfg.data };
+            } catch (e) {
+                console.error('Supabase load error', e);
             }
 
-            // Sincronizar lista de usuários no estado
-            state.users = globalUsers ? JSON.parse(globalUsers) : [];
-
-            // Se não houver sessão ativa
-            if (!state.session || !state.session.loggedIn) {
-                state.session = { loggedIn: true, currentEmail: 'admin@salao.com', isDemo: false };
-            }
-
-            // Se houver sessão, mas não for demo, carregar os dados individuais do usuário
-            if (state.session.loggedIn && !state.session.isDemo) {
-                const userSavedData = localStorage.getItem('lumi_user_' + state.session.currentEmail);
-                if (userSavedData) {
-                    const parsedData = JSON.parse(userSavedData);
-                    parsedData.session = state.session;
-                    parsedData.users = state.users;
-                    if (!parsedData.config) parsedData.config = {};
-                    state = parsedData;
-                } else {
-                    // Usuário novo! Inicializar com mock data elegante para onboarding
-                    state.clientes = [
-                        { id: 'c1', nome: 'Ana Silva', whatsapp: '5511988887777', fichaCompleta: true, ultimaVisita: '2024-04-10', totalVisitas: 5, alergias: 'Nenhuma', linkId: 'ana123', pontos: 150, nascimento: '1995-04-23' },
-                        { id: 'c2', nome: 'Beatriz Costa', whatsapp: '5511977776666', fichaCompleta: false, ultimaVisita: '2024-03-15', totalVisitas: 2, linkId: 'bea456', pontos: 40, nascimento: '1990-10-12' },
-                        { id: 'c3', nome: 'Carla Souza', whatsapp: '5511966665555', fichaCompleta: true, ultimaVisita: '2024-01-20', totalVisitas: 12, linkId: 'car789', pontos: 320, nascimento: '1988-05-05' },
-                        { id: 'c4', nome: 'Daniela Lima', whatsapp: '5511955554444', fichaCompleta: false, ultimaVisita: '2024-04-20', totalVisitas: 1, linkId: 'dan012', pontos: 10, nascimento: '1992-12-25' }
-                    ];
-                    state.servicos = [
-                        { id: 's1', nome: 'Sobrancelha', duracao: 30, preco: 45, pontos: 10 },
-                        { id: 's2', nome: 'Limpeza de Pele', duracao: 60, preco: 120, pontos: 30 },
-                        { id: 's3', nome: 'Design + Henna', duracao: 45, preco: 70, pontos: 15 }
-                    ];
-                    state.profissionais = [
-                        { id: 'p1', nome: 'Fernanda' },
-                        { id: 'p2', nome: 'Juliana' }
-                    ];
-                    state.agendamentos = [
-                        { id: 'a1', clienteId: 'c1', servicoId: 's1', data: hoje, hora: '09:00', status: 'realizado', profissionalId: 'p1' },
-                        { id: 'a2', clienteId: 'c2', servicoId: 's2', data: hoje, hora: '10:30', status: 'confirmado', profissionalId: 'p2' },
-                        { id: 'a3', clienteId: 'c4', servicoId: 's3', data: hoje, hora: '14:00', status: 'pendente', profissionalId: 'p1' }
-                    ];
-                    state.produtos = [
-                        { id: 'pr1', nome: 'Cera Mel', qtd: 5, min: 10, un: 'un', cat: 'Depilação' },
-                        { id: 'pr2', nome: 'Álcool 70%', qtd: 2, min: 5, un: 'litros', cat: 'Higiene' },
-                        { id: 'pr3', nome: 'Máscara Argila', qtd: 15, min: 5, un: 'un', cat: 'Limpeza' }
-                    ];
-                    state.transacoes = [
-                        { id: 't1', tipo: 'entrada', valor: 45, desc: 'Sobrancelha - Ana Silva', data: hoje, fpag: 'Pix' },
-                        { id: 't2', tipo: 'saida', valor: 200, desc: 'Aluguel Semanal', data: hoje, fpag: 'Dinheiro' }
-                    ];
-                    state.avaliacoes = [];
-                    
-                    const u = state.users.find(usr => usr.email === state.session.currentEmail);
-                    if (u) {
-                        if (!state.config) state.config = {};
-                        state.config.nomeClinica = u.nomeClinica || 'Espaço Elysée';
-                        state.config.whatsapp = u.whatsapp || '5511999999999';
-                        state.config.isSubscribed = u.isSubscribed || false;
-                        state.config.subscriptionId = u.subscriptionId || '';
-                        state.config.subscriptionDate = u.subscriptionDate || '';
-                        state.config.subscriptionType = u.subscriptionType || '';
-                    }
-                    localStorage.setItem('lumi_user_' + state.session.currentEmail, JSON.stringify(state));
-                }
-            }
-
-            // Validar qual tela deve estar visível
             if (document.getElementById('auth-wall')) document.getElementById('auth-wall').style.display = 'none';
             if (document.getElementById('billing-gate')) document.getElementById('billing-gate').style.display = 'none';
             document.getElementById('app').style.display = 'flex';
