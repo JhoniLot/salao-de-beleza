@@ -416,15 +416,59 @@
             position: absolute;
             left: 10px;
             right: 10px;
-            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-            color: white;
-            padding: 12px 16px;
-            border-radius: 12px;
-            font-size: 13px;
-            font-weight: 500;
+            border-radius: 8px;
+            font-size: 12px;
             overflow: hidden;
-            box-shadow: 0 10px 25px rgba(201, 168, 76, 0.2);
-            border: 1px solid rgba(255,255,255,0.1);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 8px 12px;
+            border: 1px solid rgba(0,0,0,0.05);
+            border-left-width: 4px;
+            border-left-style: solid;
+        }
+        .appointment-block:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        .appointment-block-header {
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-bottom: 4px;
+            color: #2D2D2D;
+        }
+        .appointment-block-body {
+            color: #555;
+            font-size: 11px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .weekly-block {
+            border-radius: 6px;
+            padding: 6px 8px;
+            font-size: 10px;
+            border-left-width: 3px;
+            border-left-style: solid;
+            cursor: pointer;
+            border-top: 1px solid rgba(0,0,0,0.05);
+            border-right: 1px solid rgba(0,0,0,0.05);
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+            box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+            margin-bottom: 6px;
+            transition: all 0.2s;
+            color: #333;
+        }
+        .weekly-block:hover {
+            transform: scale(1.02);
         }
 
         .dashboard-content {
@@ -1515,8 +1559,16 @@
                                         ${d.toLocaleDateString('pt-BR', {weekday: 'short'})}<br>
                                         <span style="font-size: 12px; color: var(--text-light)">${d.getDate()}</span>
                                     </div>
-                                    <div style="display: flex; flex-direction: column; gap: 8px;">
-                                        ${ags.map(a => `<div class="badge badge-${a.status}" style="font-size: 9px; cursor:pointer" onclick="openModal('detalhe-agendamento', ${JSON.stringify(a).replace(/"/g, '&quot;')})">${a.hora}</div>`).join('')}
+                                    <div style="display: flex; flex-direction: column; gap: 4px;">
+                                        ${ags.map(a => {
+                                            const srv = state.servicos.find(s => s.id === a.servicoId);
+                                            const cli = state.clientes.find(c => c.id === a.clienteId);
+                                            const cor = srv?.cor || '#C9A84C';
+                                            return `<div class="weekly-block" style="background-color: ${cor}15; border-left-color: ${cor};" onclick="openModal('detalhe-agendamento', ${JSON.stringify(a).replace(/"/g, '&quot;')})">
+                                                <strong style="display: flex; align-items: center; gap: 4px; margin-bottom: 2px;"><i data-lucide="clock" style="width: 10px;"></i> ${a.hora}</strong>
+                                                ${cli ? cli.nome.split(' ')[0] : 'Cli'} • ${srv ? srv.nome : 'Srv'}
+                                            </div>`;
+                                        }).join('')}
                                     </div>
                                 </div>
                             `;
@@ -1629,6 +1681,10 @@
                 <label>Duração (min)</label>
                 <input type="number" id="edit-srv-duracao" class="form-control">
             </div>
+        </div>
+        <div class="form-group">
+            <label>Cor na Agenda</label>
+            <input type="color" id="edit-srv-cor" class="form-control" style="padding: 0; height: 36px; cursor: pointer;">
         </div>
         <div class="form-group" style="display: flex; align-items: center; gap: 8px; margin-top: 10px;">
             <input type="checkbox" id="edit-srv-encaixe" onchange="toggleListaEncaixes('edit-srv-encaixe', 'lista-encaixes-edit')" style="width: 18px; height: 18px;">
@@ -1800,10 +1856,24 @@
                 const duracao = s ? s.duracao : 30;
 
                 const block = document.createElement('div');
+                const corServico = s?.cor || '#C9A84C';
                 block.className = 'appointment-block';
                 block.style.top = top + 'px';
                 block.style.height = duracao + 'px';
-                block.innerHTML = `<strong>${a.hora}</strong> ${c ? c.nome : 'Cli'} - ${s ? s.nome : 'Srv'}`;
+                block.style.backgroundColor = corServico + '22';
+                block.style.borderLeftColor = corServico;
+                
+                const clientName = c ? c.nome.split(' ')[0] : 'Cliente';
+                const srvName = s ? s.nome : 'Serviço';
+                
+                block.innerHTML = `
+                    <div class="appointment-block-header">
+                        <i data-lucide="clock" style="width: 12px;"></i> ${a.hora}
+                    </div>
+                    <div class="appointment-block-body">
+                        <strong>${clientName}</strong> • ${srvName}
+                    </div>
+                `;
                 block.onclick = (e) => { e.stopPropagation(); openModal('detalhe-agendamento', a); };
                 slots.appendChild(block);
             });
@@ -1908,6 +1978,7 @@
             document.getElementById('edit-srv-nome').value = s.nome;
             document.getElementById('edit-srv-preco').value = s.preco;
             document.getElementById('edit-srv-duracao').value = s.duracao;
+            document.getElementById('edit-srv-cor').value = s.cor || '#C9A84C';
             document.getElementById('edit-srv-encaixe').checked = s.permiteEncaixe === true;
             openModal('editar-servico');
             setTimeout(() => {
@@ -1928,14 +1999,16 @@
                 document.querySelectorAll('.lista-encaixes-edit-chk:checked').forEach(cb => compativeis.push(cb.value));
             }
 
-            const s = state.servicos.find(ser => ser.id === id);
-            if(s) {
-                s.nome = nome;
-                s.preco = preco;
-                s.duracao = duracao;
-                s.permiteEncaixe = encaixe;
-                s.servicos_compativeis = compativeis;
-                await dbUpdate('servicos', id, { nome, preco, duracao, permite_encaixe: encaixe, servicos_compativeis: compativeis });
+            const sIndex = state.servicos.findIndex(ser => ser.id === id);
+            if (sIndex > -1) {
+                state.servicos[sIndex].nome = nome;
+                state.servicos[sIndex].preco = preco;
+                state.servicos[sIndex].duracao = duracao;
+                state.servicos[sIndex].permiteEncaixe = encaixe;
+                state.servicos[sIndex].servicos_compativeis = compativeis;
+                state.servicos[sIndex].cor = document.getElementById('edit-srv-cor').value || '#C9A84C';
+                save();
+                await dbUpdate("servicos", id, state.servicos[sIndex]);
                 closeModal();
                 showView('servicos');
                 toast('Serviço atualizado!');
@@ -2300,6 +2373,10 @@
                         </div>
                     </div>
                     <div class="form-group">
+                        <label>Cor na Agenda</label>
+                        <input type="color" id="new-srv-cor" class="form-control" value="#C9A84C" style="padding: 0; height: 36px; cursor: pointer;">
+                    </div>
+                    <div class="form-group">
                         <label>Pontos Gerados (Programa Fidelidade)</label>
                         <input type="number" id="new-srv-pts" class="form-control" placeholder="10">
                     </div>
@@ -2550,7 +2627,8 @@
                 custo: parseFloat(custo),
                 pontos: parseInt(pts),
                 permiteEncaixe: permiteEncaixe,
-                servicos_compativeis: compativeis
+                servicos_compativeis: compativeis,
+                cor: document.getElementById('new-srv-cor').value || '#C9A84C',
             };
             state.servicos.push(novo); save(); await dbInsert("servicos", novo);
             closeModal();
