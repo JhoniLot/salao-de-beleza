@@ -1632,9 +1632,10 @@
             </div>
         </div>
         <div class="form-group" style="display: flex; align-items: center; gap: 8px; margin-top: 10px;">
-            <input type="checkbox" id="edit-srv-encaixe" style="width: 18px; height: 18px;">
+            <input type="checkbox" id="edit-srv-encaixe" onchange="toggleListaEncaixes('edit-srv-encaixe', 'lista-encaixes-edit')" style="width: 18px; height: 18px;">
             <label for="edit-srv-encaixe" style="margin: 0; font-weight: normal;">Permitir Encaixe neste serviço?</label>
         </div>
+        <div id="lista-encaixes-edit" style="display:none; margin-bottom: 12px;"></div>
         <button class="btn btn-primary" style="width: 100%; margin-top: 12px;" onclick="salvarEdicaoServico()">Salvar Alterações</button>
     </div>
 
@@ -1910,6 +1911,10 @@
             document.getElementById('edit-srv-duracao').value = s.duracao;
             document.getElementById('edit-srv-encaixe').checked = s.permiteEncaixe === true;
             openModal('editar-servico');
+            setTimeout(() => {
+                renderCheckboxEncaixes('lista-encaixes-edit', s.id, s.servicos_compativeis || []);
+                toggleListaEncaixes('edit-srv-encaixe', 'lista-encaixes-edit');
+            }, 50);
         }
 
         async function salvarEdicaoServico() {
@@ -1918,17 +1923,61 @@
             const preco = parseFloat(document.getElementById('edit-srv-preco').value);
             const duracao = parseInt(document.getElementById('edit-srv-duracao').value);
             const encaixe = document.getElementById('edit-srv-encaixe').checked;
+            
+            const compativeis = [];
+            if (encaixe) {
+                document.querySelectorAll('.lista-encaixes-edit-chk:checked').forEach(cb => compativeis.push(cb.value));
+            }
+
             const s = state.servicos.find(ser => ser.id === id);
             if(s) {
                 s.nome = nome;
                 s.preco = preco;
                 s.duracao = duracao;
                 s.permiteEncaixe = encaixe;
-                await dbUpdate('servicos', id, { nome, preco, duracao, permite_encaixe: encaixe });
+                s.servicos_compativeis = compativeis;
+                await dbUpdate('servicos', id, { nome, preco, duracao, permite_encaixe: encaixe, servicos_compativeis: compativeis });
                 closeModal();
                 showView('servicos');
                 toast('Serviço atualizado!');
             }
+        }
+
+        // --- Helper de Encaixes ---
+        function toggleListaEncaixes(checkboxId, containerId) {
+            const isChecked = document.getElementById(checkboxId).checked;
+            const container = document.getElementById(containerId);
+            if (container) container.style.display = isChecked ? 'block' : 'none';
+        }
+
+        function renderCheckboxEncaixes(containerId, serviceIdToExclude = null, preSelecionados = []) {
+            const container = document.getElementById(containerId);
+            if (!container) return;
+            
+            let html = '<div style="margin-top:8px; padding: 12px; background: var(--bg-color); border-radius: 8px; border: 1px solid var(--border-color);">';
+            html += '<label style="font-size:12px; margin-bottom:8px; display:block;">Selecione os serviços que podem ser feitos simultaneamente:</label>';
+            html += '<div style="display: flex; flex-direction: column; gap: 8px; max-height: 150px; overflow-y: auto; padding-right: 4px;">';
+            
+            let hasOptions = false;
+            state.servicos.forEach(s => {
+                if (s.id !== serviceIdToExclude) {
+                    hasOptions = true;
+                    const isChecked = preSelecionados.includes(s.id) ? 'checked' : '';
+                    html += `
+                        <label style="display: flex; align-items: center; gap: 8px; font-weight: normal; cursor: pointer; margin:0;">
+                            <input type="checkbox" class="${containerId}-chk" value="${s.id}" ${isChecked} style="width: 16px; height: 16px;">
+                            <span style="font-size: 13px;">${s.nome} (${s.duracao} min)</span>
+                        </label>
+                    `;
+                }
+            });
+            
+            if (!hasOptions) {
+                html += '<span style="font-size:12px; color:var(--text-light);">Não há outros serviços cadastrados.</span>';
+            }
+            
+            html += '</div></div>';
+            container.innerHTML = html;
         }
 
         // --- SERVICOS ---
@@ -2283,14 +2332,16 @@
                         <input type="number" id="new-srv-pts" class="form-control" placeholder="10">
                     </div>
                     <div class="form-group" style="margin-top: 10px; display: flex; align-items: center; gap: 8px;">
-                        <input type="checkbox" id="new-srv-encaixe" style="width: 16px; height: 16px; accent-color: var(--primary);">
+                        <input type="checkbox" id="new-srv-encaixe" onchange="toggleListaEncaixes('new-srv-encaixe', 'lista-encaixes-novo')" style="width: 16px; height: 16px; accent-color: var(--primary);">
                         <label for="new-srv-encaixe" style="margin: 0; font-size: 14px; cursor: pointer;">Permitir Encaixe neste serviço?</label>
                     </div>
+                    <div id="lista-encaixes-novo" style="display:none; margin-bottom: 12px;"></div>
                     <div style="display: flex; gap: 12px; margin-top: 12px;">
                         <button class="btn btn-ghost" onclick="closeModal()" style="flex: 1">Cancelar</button>
                         <button class="btn btn-primary" onclick="saveNovoServico()" style="flex: 2">Salvar Serviço</button>
                     </div>
                 `;
+                setTimeout(() => renderCheckboxEncaixes('lista-encaixes-novo', null, []), 50);
             }
 
             if (type === 'novo-agendamento') {
@@ -2512,6 +2563,11 @@
             const pts = document.getElementById('new-srv-pts').value || 0;
             const permiteEncaixe = document.getElementById('new-srv-encaixe') ? document.getElementById('new-srv-encaixe').checked : false;
 
+            const compativeis = [];
+            if (permiteEncaixe) {
+                document.querySelectorAll('.lista-encaixes-novo-chk:checked').forEach(cb => compativeis.push(cb.value));
+            }
+
             if (!nome || !dur || !preco) return alert('Preencha todos os campos!');
 
             const novo = {
@@ -2521,7 +2577,8 @@
                 preco: parseFloat(preco),
                 custo: parseFloat(custo),
                 pontos: parseInt(pts),
-                permiteEncaixe: permiteEncaixe
+                permiteEncaixe: permiteEncaixe,
+                servicos_compativeis: compativeis
             };
             state.servicos.push(novo); save(); await dbInsert("servicos", novo);
             closeModal();
