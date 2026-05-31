@@ -417,52 +417,72 @@
             left: 10px;
             right: 10px;
             border-radius: 8px;
-            font-size: 12px;
+            font-size: 11px;
             overflow: hidden;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            box-shadow: 0 2px 6px rgba(0,0,0,0.04);
             cursor: pointer;
             transition: all 0.2s;
             display: flex;
             flex-direction: column;
-            justify-content: center;
-            padding: 8px 12px;
-            border: 1px solid rgba(0,0,0,0.05);
+            justify-content: flex-start;
+            padding: 4px 8px;
+            border: 1px solid rgba(255,255,255,0.4);
             border-left-width: 4px;
             border-left-style: solid;
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
         }
         .appointment-block:hover {
             transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            z-index: 10;
         }
         .appointment-block-header {
             font-weight: 700;
             display: flex;
             align-items: center;
-            gap: 6px;
-            margin-bottom: 4px;
-            color: #2D2D2D;
+            gap: 4px;
+            margin-bottom: 2px;
+            color: #1A1A1A;
+            font-size: 11px;
+            line-height: 1;
         }
         .appointment-block-body {
-            color: #555;
+            color: #444;
             font-size: 11px;
+            line-height: 1.2;
             display: flex;
-            align-items: center;
-            gap: 4px;
-            white-space: nowrap;
+            align-items: flex-start;
+            gap: 6px;
             overflow: hidden;
+            white-space: nowrap;
             text-overflow: ellipsis;
+        }
+        .appointment-block-body strong {
+            color: #000;
+            font-weight: 600;
+            text-overflow: ellipsis;
+            overflow: hidden;
         }
         .weekly-block {
             border-radius: 6px;
             padding: 6px 8px;
-            font-size: 10px;
+            font-size: 11px;
             border-left-width: 3px;
             border-left-style: solid;
             cursor: pointer;
-            border-top: 1px solid rgba(0,0,0,0.05);
-            border-right: 1px solid rgba(0,0,0,0.05);
-            border-bottom: 1px solid rgba(0,0,0,0.05);
-            box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+            border: 1px solid rgba(255,255,255,0.4);
+            border-left-width: 4px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.03);
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            transition: all 0.2s;
+        }
+        .weekly-block:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.06);
+        }
             margin-bottom: 6px;
             transition: all 0.2s;
             color: #333;
@@ -1565,9 +1585,11 @@
                                             const srv = state.servicos.find(s => s.id === a.servicoId);
                                             const cli = state.clientes.find(c => c.id === a.clienteId);
                                             const cor = srv?.cor || '#C9A84C';
-                                            return `<div class="weekly-block" style="background-color: ${cor}15; border-left-color: ${cor};" onclick="openModal('detalhe-agendamento', ${JSON.stringify(a).replace(/"/g, '&quot;')})">
-                                                <strong style="display: flex; align-items: center; gap: 4px; margin-bottom: 2px;"><i data-lucide="clock" style="width: 10px;"></i> ${a.hora}</strong>
-                                                ${cli ? cli.nome.split(' ')[0] : 'Cli'} • ${srv ? srv.nome : 'Srv'}
+                                            return `<div class="weekly-block" style="background-color: ${cor}20; border-left-color: ${cor};" onclick="openModal('detalhe-agendamento', ${JSON.stringify(a).replace(/"/g, '&quot;')})">
+                                                <div style="font-weight: 700; color: #1A1A1A; display: flex; align-items: center; gap: 4px; line-height: 1;"><i data-lucide="clock" style="width: 10px; height: 10px;"></i> ${a.hora}</div>
+                                                <div style="color: #444; line-height: 1.2; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                                                    <strong style="color: #000; font-weight: 600;">${cli ? cli.nome.split(' ')[0] : 'Cliente'}</strong> - ${srv ? srv.nome : 'Serviço'}
+                                                </div>
                                             </div>`;
                                         }).join('')}
                                     </div>
@@ -1818,10 +1840,10 @@
                 
                 block.innerHTML = `
                     <div class="appointment-block-header">
-                        <i data-lucide="clock" style="width: 12px;"></i> ${a.hora}
+                        <i data-lucide="clock" style="width: 12px; height: 12px;"></i> ${a.hora}
                     </div>
                     <div class="appointment-block-body">
-                        <strong>${clientName}</strong> • ${srvName}
+                        <strong>${clientName}</strong> <span>- ${srvName}</span>
                     </div>
                 `;
                 block.onclick = (e) => { e.stopPropagation(); openModal('detalhe-agendamento', a); };
