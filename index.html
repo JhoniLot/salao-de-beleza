@@ -1460,14 +1460,14 @@
                     supabaseClient.from('agendamentos').select('*'),
                     supabaseClient.from('transacoes').select('*'),
                     supabaseClient.from('estoque').select('*'),
-                    supabaseClient.from('config').select('*').limit(1).single()
+                    supabaseClient.from('config').select('*').limit(1)
                 ]);
                 if (resCli.data) state.clientes = resCli.data;
                 if (resSrv.data) state.servicos = resSrv.data;
                 if (resAge.data) state.agendamentos = resAge.data;
                 if (resTra.data) state.transacoes = resTra.data;
                 if (resEst.data) state.produtos = resEst.data;
-                if (resCfg.data) state.config = { ...state.config, ...resCfg.data };
+                if (resCfg.data && resCfg.data.length > 0) state.config = { ...state.config, ...resCfg.data[0] };
             } catch (e) {
                 console.error('Supabase load error', e);
             }
@@ -2541,7 +2541,7 @@
                                         <input type="file" id="upload-${a.id}" style="display: none" accept="image/*" onchange="uploadFotoAtendimento('${a.id}', '${c.id}')">
                                     </div>
                                     <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px;">
-                                        ${fotos.map(f => `
+                                        ${fotos.filter(f => f && !f.includes('${f}')).map(f => `
                                             <div style="border-radius: 8px; overflow: hidden; height: 80px; border: 1px solid #F0F0F0">
                                                 <img src="${f}" style="width: 100%; height: 100%; object-fit: cover;">
                                             </div>
@@ -3091,7 +3091,7 @@
                                         <div>
                                             <h4 style="font-size: 14px; margin-bottom: 10px; color: var(--text-light)">${new Date(a.data).toLocaleDateString()} — ${s ? s.nome : ''}</h4>
                                             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-                                                ${fotosAtendimento.map(f => `
+                                                ${fotosAtendimento.filter(f => f && !f.includes('${f}')).map(f => `
                                                     <div style="border-radius: 12px; overflow: hidden; height: 150px; border: 1px solid #EEE;">
                                                         <img src="${f}" style="width: 100%; height: 100%; object-fit: cover;">
                                                     </div>
