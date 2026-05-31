@@ -2131,6 +2131,7 @@
                                         <div style="display: flex; gap: 8px;">
                                             <button class="btn btn-outline" style="padding: 6px 12px; font-size: 12px; border-color: var(--success); color: var(--success);" onclick="reporEstoque('${p.id}')">Repor</button>
                                             <button class="btn btn-outline" style="padding: 6px 12px; font-size: 12px;" onclick="darBaixaEstoque('${p.id}')">Dar Baixa</button>
+                                            <button class="btn btn-outline" style="padding: 6px 12px; font-size: 12px; border-color: var(--primary); color: var(--primary);" onclick="openModal('editar-produto', '${p.id}')">Editar</button>
                                         </div>
                                     </div>
                                     <div class="stock-bar-bg">
@@ -2310,6 +2311,32 @@
                     </div>
                     <button class="btn btn-primary" style="width: 100%; margin-top: 12px;" onclick="saveNovoProduto()">Cadastrar Produto</button>
                 `;
+            }
+            if (type === 'editar-produto') {
+                const pr = state.produtos.find(p => p.id === data);
+                if(pr) {
+                    content.innerHTML = `
+                        <h2 style="margin-bottom: 24px;">Editar Produto</h2>
+                        <div class="form-group">
+                            <label>Nome do Produto</label>
+                            <input type="text" id="edit-pr-nome" class="form-control" value="${pr.nome}">
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Qtd Atual</label>
+                                <input type="number" id="edit-pr-qtd" class="form-control" value="${pr.qtd}">
+                            </div>
+                            <div class="form-group">
+                                <label>Mínimo</label>
+                                <input type="number" id="edit-pr-min" class="form-control" value="${pr.min}">
+                            </div>
+                        </div>
+                        <div style="display: flex; gap: 12px; margin-top: 12px;">
+                            <button class="btn btn-primary" style="flex: 1;" onclick="salvarEdicaoProduto('${pr.id}')">Salvar</button>
+                            <button class="btn btn-danger" style="flex: 1;" onclick="excluirProduto('${pr.id}')">Excluir</button>
+                        </div>
+                    `;
+                }
             }
 
             if (type === 'novo-servico') {
@@ -2772,6 +2799,35 @@
             closeModal();
             showView('estoque');
             toast('Produto cadastrado!');
+        }
+        
+        async function salvarEdicaoProduto(id) {
+            const pr = state.produtos.find(p => p.id === id);
+            if (!pr) return;
+            
+            pr.nome = document.getElementById('edit-pr-nome').value;
+            pr.qtd = parseInt(document.getElementById('edit-pr-qtd').value);
+            pr.min = parseInt(document.getElementById('edit-pr-min').value);
+            
+            if (!pr.nome) return alert('Preencha o nome do produto!');
+            
+            save();
+            await dbUpdate("estoque", pr.id, { nome: pr.nome, qtd: pr.qtd, min: pr.min });
+            
+            closeModal();
+            showView('estoque');
+            toast('Produto atualizado!');
+        }
+
+        async function excluirProduto(id) {
+            if (confirm('Tem certeza que deseja excluir este produto?')) {
+                state.produtos = state.produtos.filter(p => p.id !== id);
+                save();
+                await dbDelete("estoque", id);
+                closeModal();
+                showView('estoque');
+                toast('Produto excluído!');
+            }
         }
 
         function darBaixaEstoque(id) {
