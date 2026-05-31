@@ -1800,7 +1800,7 @@
             state.agendamentos.filter(a => a.data === dataStr).forEach(a => {
                 const hour = parseInt(a.hora.split(':')[0]);
                 const min = parseInt(a.hora.split(':')[1]);
-                const top = ((hour - 8) * 60) + min;
+                const top = ((hour - 8) * 70) + (min * (70 / 60));
                 const s = state.servicos.find(ser => ser.id === a.servicoId);
                 const c = state.clientes.find(cli => cli.id === a.clienteId);
                 const duracao = s ? s.duracao : 30;
@@ -1809,7 +1809,7 @@
                 const corServico = s?.cor || '#C9A84C';
                 block.className = 'appointment-block';
                 block.style.top = top + 'px';
-                block.style.height = duracao + 'px';
+                block.style.height = (duracao * (70 / 60)) + 'px';
                 block.style.backgroundColor = corServico + '22';
                 block.style.borderLeftColor = corServico;
                 
