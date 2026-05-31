@@ -2854,6 +2854,7 @@
                 </head>
                 <body>
                     <div class="header">
+                        <button onclick="window.print()" style="margin-bottom: 20px; padding: 10px 20px; background: #C9A84C; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: bold;">🖨️ Imprimir Relatório</button>
                         <h1>Relatório Gerencial - ${nomesMeses[mesAtual]}/${anoAtual}</h1>
                         <p>${state.config.nomeClinica}</p>
                     </div>
@@ -2887,7 +2888,6 @@
                     </table>
 
                     <div class="footer">Gerado automaticamente por Espaço Elysée em ${new Date().toLocaleString()}</div>
-                    <script>window.print();<\/script>
                 </body>
                 </html>
             `);
