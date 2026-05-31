@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
@@ -2444,25 +2444,31 @@
                     <div class="form-row">
                         <div class="form-group">
                             <label>Hora</label>
-                            <input type="time" id="new-age-hora" class="form-control" value="${data && data.hora ? data.hora : '08:00'}">
+                            <input type="time" id="new-age-hora" class="form-control" value="08:00">
                         </div>
                         <div class="form-group">
                             <label>Data</label>
                             <input type="date" id="new-age-data" class="form-control" value="${new Date().toISOString().split('T')[0]}">
-                        </div>
-                    </div>
-                    <button class="btn btn-primary" style="width: 100%; margin-top: 12px;" onclick="saveNovoAgendamento()">Confirmar Horário</button>
+                         </div>
+                     </div>
+                     <button class="btn btn-primary" style="width: 100%; margin-top: 12px;" onclick="saveNovoAgendamento()">Confirmar Horário</button>
                 `;
             }
 
             if (type === 'detalhe-agendamento') {
                 const c = state.clientes.find(cli => cli.id === data.cliente_id);
                 const s = state.servicos.find(ser => ser.id === data.servico_id);
+                const clienteNome = c ? c.nome : 'Cliente Desconhecido';
+                const servicoNome = s ? s.nome : 'Serviço Desconhecido';
+                const whatsBtn = c && c.whatsapp ? `
+                    <button class="btn btn-outline" onclick="enviarWhats('${c.whatsapp}', 'confirmacao', {nome: '${clienteNome}', servico: '${servicoNome}', hora: '${data.hora}'})" style="justify-content: center;">
+                        <i data-lucide="message-circle"></i> Enviar Confirmação
+                    </button>` : '';
                 content.innerHTML = `
                     <div style="text-align: center; margin-bottom: 24px;">
                         <span class="badge badge-${data.status}">${data.status}</span>
-                        <h2 style="margin-top: 12px;">${c ? c.nome : 'Cliente'}</h2>
-                        <p style="color: var(--text-light)">${s ? s.nome : 'Serviço'} • ${data.hora}</p>
+                        <h2 style="margin-top: 12px;">${clienteNome}</h2>
+                        <p style="color: var(--text-light)">${servicoNome} • ${data.hora} — ${data.data ? new Date(data.data + 'T00:00:00').toLocaleDateString('pt-BR') : ''}</p>
                     </div>
                     <div style="display: grid; gap: 12px;">
                         ${data.status !== 'realizado' ? `
@@ -2470,14 +2476,13 @@
                                 <i data-lucide="check"></i> Marcar como Realizado
                             </button>
                         ` : ''}
-                        <button class="btn btn-outline" onclick="enviarWhats('${c.whatsapp}', 'confirmacao', {nome: '${c.nome}', servico: '${s.nome}', hora: '${data.hora}'})" style="justify-content: center;">
-                            <i data-lucide="message-circle"></i> Enviar Confirmação
-                        </button>
+                        ${whatsBtn}
                         <button class="btn btn-ghost" onclick="excluirAgendamento('${data.id}')" style="justify-content: center; color: var(--danger)">
                             <i data-lucide="trash-2"></i> Cancelar Agendamento
                         </button>
                     </div>
                 `;
+                if (window.lucide) lucide.createIcons();
             }
 
             if (type === 'perfil-cliente') {
@@ -2711,6 +2716,11 @@
             const hora = document.getElementById('new-age-hora').value;
             const data = document.getElementById('new-age-data').value;
 
+            if (!cliId) return alert('Selecione um cliente!');
+            if (!srvId) return alert('Selecione um serviço!');
+            if (!hora) return alert('Informe o horário!');
+            if (!data) return alert('Informe a data!');
+
             const novo = {
                 id: 'a' + Date.now(),
                 cliente_id: cliId,
@@ -2718,7 +2728,8 @@
                 hora: hora,
                 data: data,
                 status: 'pendente',
-                profissionalId: 'p1'
+                profissionalId: 'p1',
+                fotos: []
             };
             state.agendamentos.push(novo); save(); await dbInsert("agendamentos", novo);
             closeModal();
@@ -4293,4 +4304,5 @@
     </script>
 </body>
 </html>
+
 
