@@ -8,7 +8,24 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
-    <style>
+    
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        const supabaseUrl = 'https://nnryehmxitcjsdgaohyb.supabase.co';
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5ucnllaG14aXRjanNkZ2FvaHliIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAyMzExNjYsImV4cCI6MjA5NTgwNzE2Nn0.rimlx5UkKEM_HXBsmxxNFeYV_aGU2cr42en6-18_Gcg';
+        const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+        
+        async function dbInsert(table, data) {
+            try { await supabase.from(table).insert([data]); } catch(e) { console.error(e); }
+        }
+        async function dbDelete(table, id) {
+            try { await supabase.from(table).delete().eq('id', id); } catch(e) { console.error(e); }
+        }
+        async function dbUpdate(table, id, data) {
+            try { await supabase.from(table).update(data).eq('id', id); } catch(e) { console.error(e); }
+        }
+    </script>
+<style>
         :root {
             --primary: #C9A84C;
             --primary-dark: #A68A3D;
@@ -2410,7 +2427,7 @@
         }
 
         // --- ACTIONS ---
-        function saveNovoCliente() {
+        async function saveNovoCliente() {
             const nome = document.getElementById('new-cli-nome').value;
             const tel = document.getElementById('new-cli-tel').value;
             const nasc = document.getElementById('new-cli-nasc').value;
@@ -2431,14 +2448,13 @@
                 fotos: [],
                 linkId: Math.random().toString(36).substr(2, 6)
             };
-            state.clientes.push(novo);
-            save();
+            state.clientes.push(novo); save(); await dbInsert("clientes", novo);
             closeModal();
             showView('clientes');
             toast('Cliente cadastrado!');
         }
 
-        function saveNovoServico() {
+        async function saveNovoServico() {
             const nome = document.getElementById('new-srv-nome').value;
             const dur = document.getElementById('new-srv-dur').value;
             const preco = document.getElementById('new-srv-preco').value;
@@ -2457,17 +2473,15 @@
                 pontos: parseInt(pts),
                 permiteEncaixe: permiteEncaixe
             };
-            state.servicos.push(novo);
-            save();
+            state.servicos.push(novo); save(); await dbInsert("servicos", novo);
             closeModal();
             showView('servicos');
             toast('Serviço adicionado!');
         }
 
-        function excluirServico(id) {
+        async function excluirServico(id) {
             if (!confirm('Tem certeza que deseja excluir este serviço?')) return;
-            state.servicos = state.servicos.filter(s => s.id !== id);
-            save();
+            state.servicos = state.servicos.filter(s => s.id !== id); save(); await dbDelete("servicos", id);
             showView('servicos');
             toast('Serviço removido!');
         }
@@ -2501,7 +2515,7 @@
             }
         }
 
-        function saveNovoAgendamento() {
+        async function saveNovoAgendamento() {
             const cliId = document.getElementById('new-age-cli').value;
             const srvId = document.getElementById('new-age-srv').value;
             const hora = document.getElementById('new-age-hora').value;
@@ -2516,8 +2530,7 @@
                 status: 'pendente',
                 profissionalId: 'p1'
             };
-            state.agendamentos.push(novo);
-            save();
+            state.agendamentos.push(novo); save(); await dbInsert("agendamentos", novo);
             closeModal();
             showView('agenda');
             toast('Agendamento criado!');
@@ -2531,7 +2544,7 @@
             document.getElementById('btn-tr-saida').className = tipo === 'saida' ? 'btn btn-primary' : 'btn btn-outline';
         }
 
-        function saveNovaTransacao() {
+        async function saveNovaTransacao() {
             const desc = document.getElementById('new-tr-desc').value;
             const valor = document.getElementById('new-tr-valor').value;
             const data = document.getElementById('new-tr-data').value;
@@ -2550,14 +2563,14 @@
                 editingTransacaoId = null;
                 toast('Movimentação atualizada!');
             } else {
-                state.transacoes.push({
+                const novaTransacao = {
                     id: 't' + Date.now(),
                     tipo: tipo,
                     valor: parseFloat(valor),
                     desc: desc,
                     data: data,
                     fpag: 'Outros'
-                });
+                }; state.transacoes.push(novaTransacao); await dbInsert("transacoes", novaTransacao);
                 toast(tipo === 'entrada' ? 'Receita lançada!' : 'Despesa lançada!');
             }
             
@@ -2566,15 +2579,14 @@
             showView('caixa');
         }
 
-        function excluirTransacao(id) {
+        async function excluirTransacao(id) {
             if (!confirm('Tem certeza que deseja excluir esta movimentação?')) return;
-            state.transacoes = state.transacoes.filter(t => t.id !== id);
-            save();
+            state.transacoes = state.transacoes.filter(t => t.id !== id); save(); await dbDelete("transacoes", id);
             showView('caixa');
             toast('Movimentação removida!');
         }
 
-        function saveNovoProduto() {
+        async function saveNovoProduto() {
             const nome = document.getElementById('new-pr-nome').value;
             const qtd = document.getElementById('new-pr-qtd').value;
             const min = document.getElementById('new-pr-min').value;
@@ -2607,39 +2619,39 @@
             }
         }
 
-        function reporEstoque(id) {
+        async function reporEstoque(id) {
             const p = state.produtos.find(item => item.id === id);
             if (p) {
-                p.qtd++;
+                p.qtd++; await dbUpdate("estoque", p.id, { qtd: p.qtd });
                 save();
                 showView('estoque');
                 toast('Estoque reposto!');
             }
         }
 
-        function marcarComoRealizado(id) {
+        async function marcarComoRealizado(id) {
             const a = state.agendamentos.find(item => item.id === id);
             const s = state.servicos.find(ser => ser.id === a.servicoId);
             const c = state.clientes.find(cli => cli.id === a.clienteId);
             
-            a.status = 'realizado';
+            a.status = "realizado"; await dbUpdate("agendamentos", a.id, { status: "realizado" });
             c.ultimaVisita = a.data;
-            c.totalVisitas++;
+            c.totalVisitas++; await dbUpdate("clientes", c.id, { ultimaVisita: c.ultimaVisita, totalVisitas: c.totalVisitas });
             
             // Fidelidade
             if (s && s.pontos) {
-                c.pontos = (c.pontos || 0) + s.pontos;
+                c.pontos = (c.pontos || 0) + s.pontos; await dbUpdate("clientes", c.id, { pontos_fidelidade: c.pontos });
             }
 
             // Lançar no caixa
-            state.transacoes.push({
+            const novaTransacao = {
                 id: 't' + Date.now(),
                 tipo: 'entrada',
                 valor: s ? s.preco : 0,
                 desc: `${s ? s.nome : 'Serviço'} - ${c.nome}`,
                 data: a.data,
                 fpag: 'Pix'
-            });
+            }; state.transacoes.push(novaTransacao); await dbInsert("transacoes", novaTransacao);
 
             save();
 
@@ -2967,8 +2979,7 @@
                 fotos: []
             };
 
-            state.agendamentos.push(novo);
-            save();
+            state.agendamentos.push(novo); save(); await dbInsert("agendamentos", novo);
             
             alert(`Tudo certo! Seu agendamento de ${s.nome} foi marcado para o dia ${new Date(date).toLocaleDateString()} às ${selectedSlot}.✨`);
             renderPortalCliente(state.clientes.find(cli => cli.id === cliId), 'historico');
@@ -3537,7 +3548,7 @@
             toast('Acesso autorizado! Carregando painel...');
             
             // Reinicializar dados do usuário
-            initData();
+            await initData();
         }
 
         function handleRegister(event) {
@@ -3839,8 +3850,8 @@
         }
 
         // --- INIT ---
-        window.onload = () => {
-            initData();
+        window.onload = async () => {
+            await initData();
             checkPaymentSuccess();
             updateSidebarLogo();
             checkClientRoute();
@@ -3950,7 +3961,7 @@
             document.getElementById('btn-public-confirm').style.display = 'block';
         }
 
-        function confirmPublicBooking() {
+        async function confirmPublicBooking() {
             const nome = document.getElementById('public-nome').value.trim();
             let whatsapp = document.getElementById('public-whatsapp').value.trim().replace(/\D/g, '');
             const srvId = document.getElementById('public-srv').value;
@@ -3980,7 +3991,7 @@
                     linkId: 'link_' + Math.random().toString(36).substr(2, 6),
                     insta: ''
                 };
-                state.clientes.push(c);
+                state.clientes.push(c); await dbInsert("clientes", c);
             }
 
             const novo = {
@@ -3994,8 +4005,7 @@
                 fotos: []
             };
 
-            state.agendamentos.push(novo);
-            save();
+            state.agendamentos.push(novo); save(); await dbInsert("agendamentos", novo);
             
             const container = document.getElementById('public-booking-view');
             container.innerHTML = `
