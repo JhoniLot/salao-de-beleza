@@ -1961,7 +1961,7 @@
             if(c) {
                 c.nome = nome;
                 c.whatsapp = whats;
-                await dbUpdate('clientes', id, { nome: nome, telefone: whats });
+                await dbUpdate('clientes', id, { nome: nome, whatsapp: whats });
                 closeModal();
                 showView('clientes');
                 toast('Cliente atualizado!');
